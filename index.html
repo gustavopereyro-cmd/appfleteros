@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Subir facturas · Vázquez</title>
+<style>
+  :root{
+    --ink:#14213d; --muted:#5e6e88; --line:#e4eaf2; --bg:#f5f7fb;
+    --blue:#246bfd; --green:#087442; --amber:#935800; --red:#b62f35;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font:16px/1.5 Arial,sans-serif; min-height:100vh;
+  }
+  main{
+    max-width:620px; margin:auto; padding:32px 20px 60px;
+  }
+  .header{
+    text-align:center; margin-bottom:28px;
+  }
+  .eyebrow{
+    font-size:12px; letter-spacing:.09em; font-weight:700;
+    color:var(--blue); text-transform:uppercase;
+  }
+  h1{
+    font-size:28px; margin:8px 0 6px; letter-spacing:-.5px;
+  }
+  .sub{
+    color:var(--muted); font-size:14px; margin:0;
+  }
+  .card{
+    background:white; border:1px solid var(--line); border-radius:12px;
+    padding:26px 22px; margin-bottom:18px;
+  }
+  .card h2{
+    font-size:18px; margin:0 0 6px;
+  }
+  .card .desc{
+    font-size:13px; color:var(--muted); margin:0 0 20px;
+  }
+  label{
+    display:block; font-size:12px; font-weight:700; color:var(--muted);
+    text-transform:uppercase; letter-spacing:.06em; margin-bottom:6px;
+  }
+  input[type="text"], input[type="password"], input[type="file"]{
+    width:100%; padding:12px 14px; border:1px solid var(--line); border-radius:8px;
+    font:15px Arial,sans-serif; color:var(--ink); background:#fafcff;
+    transition:border-color .15s;
+  }
+  input[type="text"]:focus, input[type="password"]:focus, input[type="file"]:focus{
+    outline:none; border-color:var(--blue); background:white;
+  }
+  .field{margin-bottom:16px;}
+  .field:last-child{margin-bottom:0;}
+  button{
+    width:100%; font:700 15px/1.4 Arial,sans-serif;
+    border:0; border-radius:9px; background:var(--blue); color:white;
+    padding:14px 18px; cursor:pointer; min-height:48px;
+    transition:background .15s;
+  }
+  button:hover:not(:disabled){background:#1a5ce0;}
+  button:disabled{opacity:.55; cursor:not-allowed;}
+  button.secondary{
+    background:transparent; color:var(--muted); border:1px solid var(--line);
+    min-height:38px; font-size:13px; margin-top:8px;
+  }
+  button.secondary:hover{background:#f0f4fa;}
+  .alert{
+    border-radius:10px; padding:14px 16px; margin-bottom:18px; font-size:14px;
+    border:1px solid;
+  }
+  .alert.ok{background:#e7f6ed; border-color:#b8e0c9; color:var(--green);}
+  .alert.error{background:#fff0f0; border-color:#efc0c0; color:var(--red);}
+  .alert.info{background:#edf3ff; border-color:#d5e3ff; color:#315582;}
+  .alert:empty{display:none;}
+  .alert .title{font-weight:700; margin-bottom:4px;}
+  .alert .detail{font-size:13px; margin-top:8px;}
+  .alert .detail table{
+    width:100%; border-collapse:collapse; margin-top:6px;
+    background:white; border-radius:6px; overflow:hidden;
+  }
+  .alert .detail td{
+    padding:6px 10px; border-bottom:1px solid rgba(0,0,0,.08); font-size:13px;
+  }
+  .alert .detail td:last-child{text-align:right; font-variant-numeric:tabular-nums;}
+  .spinner{
+    display:inline-block; width:16px; height:16px;
+    border:2px solid rgba(255,255,255,.4);
+    border-top-color:white; border-radius:50%;
+    animation:spin .8s linear infinite;
+    vertical-align:middle; margin-right:8px;
+  }
+  @keyframes spin{to{transform:rotate(360deg);}}
+  .envios-list{list-style:none; padding:0; margin:0;}
+  .envio{
+    display:flex; justify-content:space-between; gap:12px;
+    padding:14px 0; border-bottom:1px solid var(--line); font-size:13px;
+  }
+  .envio:last-child{border-bottom:0;}
+  .envio .left{flex:1; min-width:0;}
+  .envio .factura{font-weight:700; font-size:14px;}
+  .envio .meta{color:var(--muted); font-size:12px; margin-top:2px;}
+  .envio .badge{
+    font-size:11px; font-weight:700; padding:4px 10px; border-radius:20px;
+    white-space:nowrap; align-self:flex-start;
+  }
+  .badge.VALIDADO{background:#e7f6ed; color:var(--green);}
+  .badge.ERROR_VALIDACION{background:#ffe8e8; color:var(--red);}
+  .hidden{display:none;}
+  .footer{
+    text-align:center; font-size:12px; color:var(--muted);
+    margin-top:24px;
+  }
+</style>
+</head>
+<body>
+<main>
+
+  <!-- ============ LOGIN ============ -->
+  <div id="login-view">
+    <div class="header">
+      <div class="eyebrow">Proveedor · Vázquez Abel Nicolás</div>
+      <h1>Subir facturas</h1>
+      <p class="sub">Ingresá con tu CUIT y contraseña</p>
+    </div>
+
+    <div class="card">
+      <div class="field">
+        <label for="login-cuit">CUIT</label>
+        <input type="text" id="login-cuit" autocomplete="username" inputmode="numeric" placeholder="Solo números, sin guiones">
+      </div>
+      <div class="field">
+        <label for="login-pass">Contraseña</label>
+        <input type="password" id="login-pass" autocomplete="current-password">
+      </div>
+      <div id="login-error" class="alert error hidden"></div>
+      <button id="btn-login" type="button" onclick="doLogin()">Ingresar</button>
+    </div>
+
+    <div class="footer">Instituto · Área Logística</div>
+  </div>
+
+  <!-- ============ APP ============ -->
+  <div id="app-view" class="hidden">
+    <div class="header">
+      <div class="eyebrow">Sesión activa</div>
+      <h1 id="saludo">Hola</h1>
+      <p class="sub" id="saludo-cuit"></p>
+    </div>
+
+    <div class="card">
+      <h2>Subir par de archivos</h2>
+      <p class="desc">Subí el PDF de la factura y su Excel correspondiente. Los dos o nada.</p>
+
+      <div class="field">
+        <label for="input-pdf">1. Factura (PDF)</label>
+        <input type="file" id="input-pdf" accept=".pdf,application/pdf">
+      </div>
+
+      <div class="field">
+        <label for="input-excel">2. Resumen (Excel)</label>
+        <input type="file" id="input-excel" accept=".xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel">
+      </div>
+
+      <div id="upload-alert" class="alert hidden"></div>
+
+      <button id="btn-subir" type="button" onclick="subirPar()">Validar y subir</button>
+      <button class="secondary" type="button" onclick="cancelarSubida()">Cancelar</button>
+      <button class="secondary" type="button" onclick="logout()">Cerrar sesión</button>
+    </div>
+
+    <div class="card">
+      <h2>Mis envíos</h2>
+      <p class="desc">Los últimos 50 envíos que realizaste.</p>
+      <div id="envios-container">
+        <p class="sub">Cargando…</p>
+      </div>
+    </div>
+
+    <div class="footer">Instituto · Área Logística</div>
+  </div>
+
+</main>
+
+<script>
+  // ============================================================
+  // ESTADO
+  // ============================================================
+  let SESION = null;
+  let BUSY = false;
+  const MAX_MB = 10;
+
+  const $ = function(id){ return document.getElementById(id); };
+
+  // ============================================================
+  // HELPERS
+  // ============================================================
+  function mostrarAlerta(id, tipo, mensaje, detalle){
+    const el = $(id);
+    el.className = 'alert ' + tipo;
+    let html = '<div class="title">' + escapeHtml(mensaje) + '</div>';
+    if (detalle) {
+      html += '<div class="detail">';
+      html += '<table>';
+      html += '<tr><td>Suma Excel</td><td>$ ' + formatearNumero(detalle.sumaExcel) + '</td></tr>';
+      html += '<tr><td>Suma PDF</td><td>$ ' + formatearNumero(detalle.sumaPDF) + '</td></tr>';
+      html += '<tr><td>Diferencia</td><td>$ ' + formatearNumero(detalle.diferencia) + '</td></tr>';
+      html += '<tr><td>Tolerancia</td><td>±$ ' + formatearNumero(detalle.tolerancia) + '</td></tr>';
+      html += '</table>';
+      html += '</div>';
+    }
+    el.innerHTML = html;
+    el.classList.remove('hidden');
+  }
+
+  function ocultarAlerta(id){
+    $(id).classList.add('hidden');
+  }
+
+  function formatearNumero(n){
+    if (n === null || n === undefined || isNaN(n)) return '0,00';
+    return Number(n).toLocaleString('es-AR', {
+      minimumFractionDigits: 2, maximumFractionDigits: 2
+    });
+  }
+
+  function escapeHtml(v){
+    return String(v == null ? '' : v).replace(/[&<>"']/g, function(c){
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+    });
+  }
+
+  // ============================================================
+  // SESIÓN
+  // ============================================================
+  function cerrarSesionLocal(){
+    SESION = null;
+    BUSY = false;
+    $('login-cuit').value = '';
+    $('login-pass').value = '';
+    $('input-pdf').value = '';
+    $('input-excel').value = '';
+    $('btn-subir').disabled = false;
+    $('btn-subir').textContent = 'Validar y subir';
+    $('app-view').classList.add('hidden');
+    $('login-view').classList.remove('hidden');
+    ocultarAlerta('login-error');
+    ocultarAlerta('upload-alert');
+  }
+
+  function sesionVencida(res){
+    if (res && res.sesionExpirada) {
+      cerrarSesionLocal();
+      mostrarAlerta('login-error', 'error', res.error || 'Tu sesión venció. Ingresá de nuevo.');
+      return true;
+    }
+    return false;
+  }
+
+  function doLogin(){
+    if (BUSY) return;
+    const cuit = $('login-cuit').value.trim();
+    const pass = $('login-pass').value;
+
+    ocultarAlerta('login-error');
+
+    if (!cuit || !pass) {
+      mostrarAlerta('login-error', 'error', 'Completá CUIT y contraseña.');
+      return;
+    }
+
+    BUSY = true;
+    $('btn-login').disabled = true;
+    $('btn-login').innerHTML = '<span class="spinner"></span>Ingresando…';
+
+    google.script.run
+      .withSuccessHandler(function(res){
+        BUSY = false;
+        $('btn-login').disabled = false;
+        $('btn-login').textContent = 'Ingresar';
+
+        if (!res.ok) {
+          mostrarAlerta('login-error', 'error', res.error || 'Error de login.');
+          return;
+        }
+
+        // Se guarda el token, no la contraseña
+        SESION = { token: res.token, fletero: res.fletero };
+        $('login-pass').value = '';
+        $('saludo').textContent = 'Hola, ' + res.fletero.Nombre;
+        $('saludo-cuit').textContent = 'CUIT: ' + res.fletero.CUIT;
+        $('login-view').classList.add('hidden');
+        $('app-view').classList.remove('hidden');
+        cargarEnvios();
+      })
+      .withFailureHandler(function(err){
+        BUSY = false;
+        $('btn-login').disabled = false;
+        $('btn-login').textContent = 'Ingresar';
+        mostrarAlerta('login-error', 'error', 'Error de conexión: ' + err.message);
+      })
+      .login(cuit, pass);
+  }
+
+  function logout(){
+    if (SESION) google.script.run.cerrarSesion(SESION.token);
+    cerrarSesionLocal();
+  }
+
+  // ============================================================
+  // SUBIR PAR
+  // ============================================================
+  function subirPar(){
+    if (BUSY || !SESION) return;
+
+    const pdfInput = $('input-pdf');
+    const excelInput = $('input-excel');
+
+    ocultarAlerta('upload-alert');
+
+    if (!pdfInput.files.length) {
+      mostrarAlerta('upload-alert', 'error', 'Falta seleccionar el PDF.');
+      return;
+    }
+    if (!excelInput.files.length) {
+      mostrarAlerta('upload-alert', 'error', 'Falta seleccionar el Excel.');
+      return;
+    }
+
+    const pdfFile = pdfInput.files[0];
+    const excelFile = excelInput.files[0];
+    const maxBytes = MAX_MB * 1024 * 1024;
+
+    if (!/\.pdf$/i.test(pdfFile.name)) {
+      mostrarAlerta('upload-alert', 'error', 'El primer archivo debe ser un PDF.');
+      return;
+    }
+    if (!/\.(xlsx|xls)$/i.test(excelFile.name)) {
+      mostrarAlerta('upload-alert', 'error', 'El segundo archivo debe ser un Excel (.xlsx o .xls).');
+      return;
+    }
+    if (pdfFile.size > maxBytes || excelFile.size > maxBytes) {
+      mostrarAlerta('upload-alert', 'error', 'Cada archivo puede pesar hasta ' + MAX_MB + ' MB.');
+      return;
+    }
+
+    const token = SESION.token;
+
+    BUSY = true;
+    $('btn-subir').disabled = true;
+    $('btn-subir').innerHTML = '<span class="spinner"></span>Validando…';
+    mostrarAlerta('upload-alert', 'info', 'Validando los archivos, puede tardar unos segundos…');
+
+    Promise.all([leerBase64(pdfFile), leerBase64(excelFile)])
+      .then(function(arr){
+        google.script.run
+          .withSuccessHandler(function(res){
+            BUSY = false;
+            $('btn-subir').disabled = false;
+            $('btn-subir').textContent = 'Validar y subir';
+
+            // Limpiar inputs SIEMPRE (éxito o error)
+            $('input-pdf').value = '';
+            $('input-excel').value = '';
+
+            if (sesionVencida(res)) return;
+
+            if (!res.ok) {
+              mostrarAlerta('upload-alert', 'error', res.error || 'Error al subir.', res.detalle);
+              cargarEnvios();
+              return;
+            }
+
+            mostrarAlerta('upload-alert', 'ok', '✓ ' + res.mensaje, null);
+            cargarEnvios();
+          })
+          .withFailureHandler(function(err){
+            BUSY = false;
+            $('btn-subir').disabled = false;
+            $('btn-subir').textContent = 'Validar y subir';
+            mostrarAlerta('upload-alert', 'error', 'Error de conexión: ' + err.message);
+          })
+          .subirPar(token, arr[0], pdfFile.name, arr[1], excelFile.name);
+      })
+      .catch(function(err){
+        BUSY = false;
+        $('btn-subir').disabled = false;
+        $('btn-subir').textContent = 'Validar y subir';
+        mostrarAlerta('upload-alert', 'error', 'Error leyendo archivos: ' + err.message);
+      });
+  }
+
+  function cancelarSubida(){
+    // Con un envío en curso no se puede cancelar (evita enviar dos veces)
+    if (BUSY) return;
+    $('input-pdf').value = '';
+    $('input-excel').value = '';
+    ocultarAlerta('upload-alert');
+  }
+
+  function leerBase64(file){
+    return new Promise(function(resolve, reject){
+      const reader = new FileReader();
+      reader.onload = function(){
+        resolve(reader.result.split(',')[1]);
+      };
+      reader.onerror = function(){ reject(new Error('No se pudo leer ' + file.name)); };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  // ============================================================
+  // LISTAR ENVÍOS
+  // ============================================================
+  function cargarEnvios(){
+    if (!SESION) return;
+    $('envios-container').innerHTML = '<p class="sub">Cargando…</p>';
+
+    google.script.run
+      .withSuccessHandler(function(res){
+        if (sesionVencida(res)) return;
+        if (!res.ok) {
+          $('envios-container').innerHTML = '<p class="sub" style="color:var(--red)">' + escapeHtml(res.error) + '</p>';
+          return;
+        }
+        renderEnvios(res.envios);
+      })
+      .withFailureHandler(function(err){
+        $('envios-container').innerHTML = '<p class="sub" style="color:var(--red)">Error: ' + escapeHtml(err.message) + '</p>';
+      })
+      .listarEnvios(SESION.token);
+  }
+
+  function renderEnvios(envios){
+    if (!envios || !envios.length) {
+      $('envios-container').innerHTML = '<p class="sub">Todavía no subiste ninguna factura.</p>';
+      return;
+    }
+
+    let html = '<ul class="envios-list">';
+    envios.forEach(function(e){
+      const estado = String(e.Estado || '').trim();
+      const claseBadge = estado === 'VALIDADO' ? 'VALIDADO' : 'ERROR_VALIDACION';
+      html += '<li class="envio">';
+      html += '<div class="left">';
+      html += '<div class="factura">' + escapeHtml(e.Factura || '—') + '</div>';
+      html += '<div class="meta">' + escapeHtml(e.Fecha) + ' · ' + escapeHtml(e.Remitos) + ' remitos</div>';
+      html += '<div class="meta">Excel: $' + formatearNumero(e.Suma_Excel) + ' · PDF: $' + formatearNumero(e.Suma_PDF) + '</div>';
+      html += '</div>';
+      html += '<span class="badge ' + claseBadge + '">' + escapeHtml(estado) + '</span>';
+      html += '</li>';
+    });
+    html += '</ul>';
+    $('envios-container').innerHTML = html;
+  }
+
+  // ============================================================
+  // INICIALIZACIÓN
+  // ============================================================
+  document.addEventListener('DOMContentLoaded', function(){
+    $('login-cuit').focus();
+    $('login-cuit').addEventListener('keydown', function(e){
+      if (e.key === 'Enter') $('login-pass').focus();
+    });
+    $('login-pass').addEventListener('keydown', function(e){
+      if (e.key === 'Enter') doLogin();
+    });
+  });
+</script>
+</body>
+</html>
